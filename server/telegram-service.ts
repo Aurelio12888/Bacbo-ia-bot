@@ -10,7 +10,6 @@ if (telegramToken) {
   bot = new TelegramBot(telegramToken, { polling: true });
   console.log("Telegram Bot initialized for polling");
 
-  // Bot commands
   bot.onText(/\/start/, (msg) => {
     bot?.sendMessage(msg.chat.id, "🔥 *IA BAC BO AGRESSIVA ATIVA*\nMonitorando ElephantBet em tempo real...", { parse_mode: 'Markdown' });
   });
@@ -26,27 +25,22 @@ function analyzePattern(history: any[]): { pattern: string, prediction: 'blue' |
   const last5 = history[4].color;
   const last6 = history[5].color;
 
-  // 1. MARRETADA (Streak) - Force continuation after 3
   if (last1 === last2 && last2 === last3) {
     return { pattern: "MARRETADA", prediction: last1 as 'blue' | 'red', confidence: 'high' };
   }
 
-  // 2. QUEBRA DE SEQUÊNCIA (Reverse after 4 same)
   if (last1 === last2 && last2 === last3 && last3 === last4) {
      return { pattern: "QUEBRA DE TENDÊNCIA", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'high' };
   }
 
-  // 3. ZIG-ZAG (B R B R)
   if (last1 !== last2 && last2 !== last3 && last3 !== last4 && last1 === last3 && last2 === last4) {
     return { pattern: "ZIG-ZAG", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'high' };
   }
 
-  // 4. PADRÃO 2-2 (BB RR)
   if (last1 === last2 && last3 === last4 && last1 !== last3) {
      return { pattern: "PADRÃO 2-2", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'medium' };
   }
 
-  // 5. PADRÃO 3-1 (BBB R)
   if (last1 !== last2 && last2 === last3 && last3 === last4 && last4 !== last5) {
      return { pattern: "PADRÃO 3-1", prediction: last1 as 'blue' | 'red', confidence: 'medium' };
   }
@@ -54,8 +48,33 @@ function analyzePattern(history: any[]): { pattern: string, prediction: 'blue' |
   return null;
 }
 
-export async function processNewResult(color: 'blue' | 'red' | 'tie') {
-  if (color === 'tie') return;
+export async function processNewResult(color: 'blue' | 'red' | 'tie', score?: string) {
+  if (color === 'tie') {
+    const latestSignal = await storage.getLatestSignal();
+    if (latestSignal && latestSignal.status === 'pending') {
+      if (bot && telegramChatId) {
+        bot.sendMessage(telegramChatId, "⚪ *EMPATE DETECTADO!*\nProteção ativada. Seguimos para a próxima.", { parse_mode: 'Markdown' });
+      }
+    }
+    return;
+  }
+
+  // Check for victory from last signal BEFORE adding the new result to storage
+  const latestSignal = await storage.getLatestSignal();
+  if (latestSignal && latestSignal.status === 'pending') {
+    if (latestSignal.prediction === color) {
+      await storage.updateSignalStatus(latestSignal.id, 'won');
+      if (bot && telegramChatId) {
+        const emoji = color === 'blue' ? '🔵' : '🔴';
+        const scoreInfo = score ? ` (${score})` : '';
+        bot.sendMessage(telegramChatId, `✅ *VITÓRIA CONFIRMADA!*
+Lado: ${emoji} ${color.toUpperCase()}${scoreInfo}
+🎯 IA Agressiva no Alvo!`, { parse_mode: 'Markdown' });
+      }
+    } else {
+      await storage.updateSignalStatus(latestSignal.id, 'lost');
+    }
+  }
 
   await storage.addGameResult({ color });
   const history = await storage.getGameHistory(15);

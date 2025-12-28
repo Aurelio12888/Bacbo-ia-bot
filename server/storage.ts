@@ -10,6 +10,7 @@ export interface IStorage {
   getSignals(limit?: number): Promise<Signal[]>;
   addSignal(signal: InsertSignal): Promise<Signal>;
   getLatestSignal(): Promise<Signal | undefined>;
+  updateSignalStatus(id: number, status: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -29,7 +30,7 @@ export class DatabaseStorage implements IStorage {
 
   async clearGameHistory(): Promise<void> {
     await db.delete(gameResults);
-    await db.delete(signals); // Clear signals too as they depend on history
+    await db.delete(signals); 
   }
 
   async getSignals(limit = 20): Promise<Signal[]> {
@@ -52,6 +53,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(signals.timestamp))
       .limit(1);
     return signal;
+  }
+
+  async updateSignalStatus(id: number, status: string): Promise<void> {
+    await db.update(signals)
+      .set({ status })
+      .where(eq(signals.id, id));
   }
 }
 

@@ -14,8 +14,9 @@ export async function startScraper() {
       const currentResult = colors[Math.floor(Math.random() * colors.length)];
       
       if (currentResult !== lastResult) {
-        console.log(`[LIVE ELEPHANTBET] Monitoring Bac Bo Brasileiro... Detected: ${currentResult.toUpperCase()}`);
-        await processNewResult(currentResult as 'blue' | 'red' | 'tie');
+        const scoreValue = Math.floor(Math.random() * 6) + 1; // Simulated dice score
+        console.log(`[LIVE ELEPHANTBET] Monitoring Bac Bo Brasileiro... Detected: ${currentResult.toUpperCase()} (${scoreValue})`);
+        await processNewResult(currentResult as 'blue' | 'red' | 'tie', String(scoreValue));
         lastResult = currentResult;
       }
     } catch (error) {

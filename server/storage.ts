@@ -1,38 +1,58 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { gameResults, signals, type GameResult, type InsertGameResult, type Signal, type InsertSignal } from "@shared/schema";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getGameHistory(limit?: number): Promise<GameResult[]>;
+  addGameResult(result: InsertGameResult): Promise<GameResult>;
+  clearGameHistory(): Promise<void>;
+  
+  getSignals(limit?: number): Promise<Signal[]>;
+  addSignal(signal: InsertSignal): Promise<Signal>;
+  getLatestSignal(): Promise<Signal | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getGameHistory(limit = 50): Promise<GameResult[]> {
+    return await db.select()
+      .from(gameResults)
+      .orderBy(desc(gameResults.timestamp))
+      .limit(limit);
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async addGameResult(result: InsertGameResult): Promise<GameResult> {
+    const [newResult] = await db.insert(gameResults)
+      .values(result)
+      .returning();
+    return newResult;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async clearGameHistory(): Promise<void> {
+    await db.delete(gameResults);
+    await db.delete(signals); // Clear signals too as they depend on history
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getSignals(limit = 20): Promise<Signal[]> {
+    return await db.select()
+      .from(signals)
+      .orderBy(desc(signals.timestamp))
+      .limit(limit);
+  }
+
+  async addSignal(signal: InsertSignal): Promise<Signal> {
+    const [newSignal] = await db.insert(signals)
+      .values(signal)
+      .returning();
+    return newSignal;
+  }
+
+  async getLatestSignal(): Promise<Signal | undefined> {
+    const [signal] = await db.select()
+      .from(signals)
+      .orderBy(desc(signals.timestamp))
+      .limit(1);
+    return signal;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

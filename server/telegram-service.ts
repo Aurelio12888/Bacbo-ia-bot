@@ -51,6 +51,15 @@ function analyzePattern(history: any[]): { pattern: string, prediction: 'blue' |
 let winStreak = 0;
 let lossCount = 0;
 
+export async function notifyMarketStatus(isOpen: boolean) {
+  if (bot && telegramChatId) {
+    const message = isOpen 
+      ? "✅ *MERCADO ABERTO!*\nIA voltando a monitorar o Bac Bo em tempo real. 🚀" 
+      : "🛑 *MERCADO FECHADO!*\nAguardando o Bac Bo voltar a operar. IA em standby. 💤";
+    bot.sendMessage(telegramChatId, message, { parse_mode: 'Markdown' });
+  }
+}
+
 export async function processNewResult(color: 'blue' | 'red' | 'tie', score?: string) {
   if (color === 'tie') {
     const latestSignal = await storage.getLatestSignal();

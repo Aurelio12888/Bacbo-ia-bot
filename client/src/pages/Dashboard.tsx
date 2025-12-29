@@ -70,45 +70,6 @@ export default function Dashboard() {
             </div>
             <HistoryTape results={results} isLoading={isLoadingHistory} />
           </section>
-
-          {/* Manual Controls */}
-          <section className="glass-panel p-6 rounded-xl border-t-2 border-t-primary/50">
-            <div className="flex items-center gap-2 mb-6 text-primary">
-              <ShieldAlert className="w-5 h-5" />
-              <h3 className="text-lg font-display">Manual Override</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <CyberButton 
-                variant="primary" 
-                glow 
-                onClick={() => handleInput('blue')}
-                disabled={isAdding}
-                className="h-24 md:h-32 text-xl md:text-2xl"
-              >
-                BLUE
-              </CyberButton>
-              
-              <CyberButton 
-                variant="secondary" 
-                glow 
-                onClick={() => handleInput('red')}
-                disabled={isAdding}
-                className="h-24 md:h-32 text-xl md:text-2xl"
-              >
-                RED
-              </CyberButton>
-              
-              <CyberButton 
-                variant="ghost" 
-                onClick={() => handleInput('tie')}
-                disabled={isAdding}
-                className="h-24 md:h-32 text-xl md:text-2xl col-span-2 md:col-span-1 border-green-500/20 text-green-500 hover:bg-green-500/10 hover:text-green-400"
-              >
-                TIE
-              </CyberButton>
-            </div>
-          </section>
         </div>
 
         {/* Right Column: Pattern Log (4 cols) */}

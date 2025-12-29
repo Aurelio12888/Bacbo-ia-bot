@@ -15,47 +15,6 @@ if (telegramToken) {
   });
 }
 
-function analyzePattern(history: any[]): { pattern: string, prediction: 'blue' | 'red', confidence: 'high' } | null {
-  if (history.length < 10) return null; 
-  
-  const last1 = history[0].color;
-  const last2 = history[1].color;
-  const last3 = history[2].color;
-  const last4 = history[3].color;
-  const last5 = history[4].color;
-  const last6 = history[5].color;
-  const last7 = history[6].color;
-  const last8 = history[7].color;
-  const last9 = history[8].color;
-  const last10 = history[9].color;
-
-  // 1. MARRETADA ESTRATÉGICA (Confirmação de 5 para prever o 6º)
-  // Estratégia comprovada: Apenas entra em tendências longas e consolidadas
-  if (last1 === last2 && last2 === last3 && last3 === last4 && last4 === last5) {
-    return { pattern: "MARRETADA (96% Precisão)", prediction: last1 as 'blue' | 'red', confidence: 'high' };
-  }
-
-  // 2. QUEBRA DE TENDÊNCIA ABSOLUTA (Reversão após 6 iguais)
-  // Rigor máximo: Aguarda a exaustão total para prever a quebra com segurança
-  if (last1 === last2 && last2 === last3 && last3 === last4 && last4 === last5 && last5 === last6) {
-     return { pattern: "QUEBRA DE TENDÊNCIA (96% Precisão)", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'high' };
-  }
-
-  // 3. ZIG-ZAG MATEMÁTICO (B R B R B R B R)
-  // Requer sequência de 8 para garantir que o padrão é real e não oscilação aleatória
-  if (last1 !== last2 && last2 !== last3 && last3 !== last4 && last4 !== last5 && last5 !== last6 && last6 !== last7 && last7 !== last8) {
-    return { pattern: "ZIG-ZAG (96% Precisão)", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'high' };
-  }
-
-  // 4. PADRÃO 2-2 CONSOLIDADO (BB RR BB RR)
-  // Requer 8 resultados (4 pares) para confirmação de estratégia comprovada
-  if (last1 === last2 && last3 === last4 && last5 === last6 && last7 === last8 && last1 !== last3 && last3 === last5 && last5 !== last7) {
-     return { pattern: "PADRÃO 2-2 (96% Precisão)", prediction: last1 === 'blue' ? 'red' : 'blue', confidence: 'high' };
-  }
-
-  return null;
-}
-
 let winStreak = 0;
 let lossCount = 0;
 let totalWins = 0;
@@ -127,6 +86,15 @@ function broadcastStats() {
 _Monitoramento 24h ElephantBet_`;
     bot.sendMessage(telegramChatId, message, { parse_mode: 'Markdown' });
     lastStatsBroadcast = Date.now();
+  }
+}
+
+export async function notifyMarketStatus(isOpen: boolean) {
+  if (bot && telegramChatId) {
+    const message = isOpen 
+      ? "✅ *MERCADO ABERTO!*\nIA voltando a monitorar o Bac Bo em tempo real. 🚀" 
+      : "🛑 *MERCADO FECHADO!*\nAguardando o Bac Bo voltar a operar. IA em standby. 💤";
+    bot.sendMessage(telegramChatId, message, { parse_mode: 'Markdown' });
   }
 }
 
